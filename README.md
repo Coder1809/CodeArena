@@ -2,12 +2,6 @@
 
 A real-time competitive programming platform where users compete in 1v1 coding duels using Codeforces problems.
 
-## Live Demo
-
-**Website:** https://your-domain.com
-
-> Replace the above URL with your deployed application (Vercel/Render/Railway/etc.).
-
 ---
 
 ## Features
@@ -48,7 +42,7 @@ A real-time competitive programming platform where users compete in 1v1 coding d
 
 ---
 
-# Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |--------|------------|
@@ -61,7 +55,7 @@ A real-time competitive programming platform where users compete in 1v1 coding d
 
 ---
 
-# Design System
+## Design System
 
 The frontend uses a comprehensive CSS custom properties design system:
 
@@ -86,17 +80,17 @@ The frontend uses a comprehensive CSS custom properties design system:
 
 ---
 
-# Project Structure
+## Project Structure
 
 ```text
 CodeArena/
 ├── backend/
-│   ├── auth.js
-│   ├── db.js
-│   ├── matchManager.js
-│   ├── server.js
+│   ├── auth.js          # JWT authentication & user routes
+│   ├── db.js            # PostgreSQL connection pool
+│   ├── matchManager.js  # Duel/match lifecycle management
+│   ├── server.js        # Express server, REST API & Socket.IO
 │   └── services/
-│       └── codeforces.js
+│       └── codeforces.js  # Codeforces API integration
 │
 ├── frontend/
 │   ├── src/
@@ -108,20 +102,21 @@ CodeArena/
 │   │   │   ├── SoloPrep.jsx
 │   │   │   ├── Leaderboard.jsx
 │   │   │   └── DuelRoom.jsx
-│   │   ├── App.jsx
-│   │   ├── config.js
-│   │   └── index.css
-│   ├── index.html
+│   │   ├── App.jsx      # App shell, routing, theme toggle, navbar
+│   │   ├── config.js    # API base URL config
+│   │   └── index.css    # Design system (themes, tokens, components)
+│   ├── index.html       # Entry HTML with theme initialization
 │   └── vite.config.js
 │
-├── init.sql
+├── init.sql             # Database schema
 ├── docker-compose.yml
+├── .env.example         # Backend environment variables template
 └── README.md
 ```
 
 ---
 
-# Database Schema
+## Database Schema
 
 ### Users
 
@@ -151,69 +146,98 @@ CodeArena/
 
 ---
 
-# API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |---------|----------|-------------|
-| POST | `/register` | Register a new user |
-| POST | `/login` | Login |
-| GET | `/me` | Current user profile |
-| POST | `/update-cf` | Update Codeforces handle |
+| GET | `/` | Health check (returns version & status) |
+| POST | `/auth/register` | Register a new user |
+| POST | `/auth/login` | Login |
+| GET | `/auth/me` | Current user profile (requires auth) |
+| POST | `/auth/update-cf` | Update Codeforces handle (requires auth) |
 | POST | `/create-room` | Create a duel room |
 | POST | `/join-room` | Join a duel room |
 | GET | `/room/:id` | Retrieve room state |
-| GET | `/leaderboard` | Global leaderboard |
-| GET | `/problem` | Random Codeforces problem |
-| GET | `/winner` | Retrieve winner status |
+| GET | `/leaderboard` | Global leaderboard (top 50) |
+| GET | `/problem` | Random Codeforces problem by rating range |
+| GET | `/winner` | Retrieve winner status for a room |
+
+> Legacy top-level routes (`/login`, `/register`, `/me`, `/update-cf`) are proxied to `/auth/*` for backward compatibility.
 
 ---
 
-# Socket.IO Events
+## Socket.IO Events
 
 ### Client → Server
 
-- `join-room`
-- `start-match`
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `join-room` | `{ roomId, userId }` | Join a duel room |
+| `start-match` | `{ roomId }` | Start the match |
 
 ### Server → Client
 
-- `room-updated`
-- `problem-selected`
-- `submission-found`
-- `match-ended`
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `room-updated` | Room object | Room state changed |
+| `problem-selected` | Problem object | Problem assigned |
+| `submission-found` | `{ player, cfHandle }` | A player solved the problem |
+| `match-ended` | `{ winner, winnerId }` | Match finished |
 
 ---
 
-# Getting Started
+## Getting Started
 
-## Prerequisites
+### Prerequisites
 
 - Node.js 18+
 - PostgreSQL
 - Git
 
-## Clone the Repository
+### Clone the Repository
 
 ```bash
 git clone https://github.com/Coder1809/CodeArena.git
 cd CodeArena
 ```
 
-## Database Setup
+### Environment Variables
 
-Create a PostgreSQL database named:
+#### Backend (`backend/.env` or root `.env`)
 
-```text
-cp_duel
+```env
+PORT=3000
+JWT_SECRET=your_jwt_secret_key
+DATABASE_URL=postgresql://username:password@localhost:5432/cp_duel
+CLIENT_URL=http://localhost:5173
 ```
 
-Import the schema:
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Backend server port | `3000` |
+| `JWT_SECRET` | Secret key for JWT signing | — (required) |
+| `DATABASE_URL` | PostgreSQL connection string | — (required) |
+| `CLIENT_URL` | Allowed CORS origin for frontend | `http://localhost:5173` |
+
+#### Frontend (`frontend/.env`)
+
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_URL` | Backend API base URL | `http://localhost:3000` |
+
+### Database Setup
+
+Create a PostgreSQL database named `cp_duel` and import the schema:
 
 ```bash
 psql -d cp_duel -f init.sql
 ```
 
-Alternatively, use Docker:
+Or use Docker:
 
 ```bash
 docker compose up -d db
@@ -221,7 +245,7 @@ docker compose up -d db
 
 ---
 
-## Backend
+### Backend
 
 ```bash
 cd backend
@@ -229,15 +253,16 @@ npm install
 npm start
 ```
 
-Backend runs at:
+Backend runs at `http://localhost:3000`. Verify with:
 
-```
-http://localhost:3000
+```bash
+curl http://localhost:3000/
+# → { "success": true, "message": "CodeArena Backend is running 🚀", "version": "1.0.0" }
 ```
 
 ---
 
-## Frontend
+### Frontend
 
 ```bash
 cd frontend
@@ -245,26 +270,22 @@ npm install
 npm run dev
 ```
 
-Frontend runs at:
-
-```
-http://localhost:5173
-```
+Frontend runs at `http://localhost:5173`.
 
 ---
 
-# Usage
+## Usage
 
 1. Register or log in.
-2. Link your Codeforces handle.
+2. Link your Codeforces handle in the Dashboard.
 3. Toggle between light and dark themes using the Sun/Moon button in the navbar.
 4. Create or join a duel room.
-5. Solve the assigned problem.
-6. The server automatically verifies submissions and determines the winner.
+5. Solve the assigned Codeforces problem before your opponent.
+6. The server automatically verifies submissions via the Codeforces API and determines the winner.
 
 ---
 
-# Future Improvements
+## Future Improvements
 
 - Elo rating system
 - Match history
@@ -276,6 +297,6 @@ http://localhost:5173
 
 ---
 
-# License
+## License
 
 This project is licensed under the MIT License.
