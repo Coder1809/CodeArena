@@ -61,15 +61,19 @@ export default function SoloPrep({ user, token }) {
 
   if (!user?.cf_handle) {
     return (
-      <div style={{ maxWidth: '500px', margin: '4rem auto', width: '100%', textAlign: 'center' }}>
-        <div className="card" style={{ borderColor: 'var(--danger-color)' }}>
-          <ShieldAlert size={48} color="var(--danger-color)" style={{ marginBottom: '1rem' }} />
-          <h2 style={{ color: 'var(--danger-color)', marginBottom: '0.5rem', fontSize: '1.4rem', fontFamily: 'var(--font-heading)' }}>
-            Codeforces Handle Required
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-            Set your Codeforces handle in your Dashboard before starting solo practice.
-          </p>
+      <div className="page-wrapper page-wrapper--narrow">
+        <div className="card" style={{ textAlign: 'center' }}>
+          <div className="page-header">
+            <div className="page-header__icon" style={{ borderColor: 'var(--danger-border)', background: 'var(--danger-subtle)' }}>
+              <ShieldAlert size={28} color="var(--danger)" />
+            </div>
+            <h2 className="page-header__title" style={{ color: 'var(--danger)' }}>
+              Codeforces Handle Required
+            </h2>
+            <p className="page-header__subtitle">
+              Set your Codeforces handle in your Dashboard before starting solo practice.
+            </p>
+          </div>
           <button onClick={() => navigate('/dashboard')}>Go to Dashboard</button>
         </div>
       </div>
@@ -79,30 +83,31 @@ export default function SoloPrep({ user, token }) {
   const activeDuration = parseInt(timeLimit) || 45;
 
   return (
-    <div style={{ maxWidth: '620px', margin: '2rem auto', width: '100%' }}>
+    <div className="page-wrapper">
       <div className="card">
-        <h1 className="title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          <Target size={34} color="#10b981" />
-          Solo Practice Arena
-        </h1>
-        <p className="subtitle">
-          Practice Codeforces problems under timed conditions with a custom timer
-        </p>
+        <div className="page-header">
+          <h1 className="page-header__title page-header__title--with-icon">
+            <Target size={30} color="var(--success)" />
+            Solo Practice Arena
+          </h1>
+          <p className="page-header__subtitle">
+            Practice Codeforces problems under timed conditions with a custom timer
+          </p>
+        </div>
 
         <form onSubmit={handleCreateSoloMatch}>
-          {/* Custom Timer Feature */}
+          {/* Timer Duration */}
           <div className="form-group">
-            <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Clock size={16} color="#10b981" /> Practice Timer Duration
+            <label className="label" htmlFor="solo-custom-timer">
+              <Clock size={16} color="var(--success)" /> Practice Timer Duration
             </label>
-            
+
             <div className="timer-presets">
               {[15, 30, 45, 60].map(mins => (
                 <button
                   type="button"
                   key={mins}
                   className={`preset-btn ${!customTime && timeLimit === mins.toString() ? 'active' : ''}`}
-                  style={!customTime && timeLimit === mins.toString() ? { background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white' } : {}}
                   onClick={() => handlePresetSelect(mins)}
                 >
                   {mins} Mins
@@ -110,28 +115,29 @@ export default function SoloPrep({ user, token }) {
               ))}
             </div>
 
-            <div style={{ marginTop: '0.6rem' }}>
-              <input
-                type="number"
-                min="1"
-                max="300"
-                placeholder="Or enter custom timer in minutes (e.g. 10, 90)"
-                value={customTime}
-                onChange={handleCustomTimeChange}
-              />
-            </div>
+            <input
+              id="solo-custom-timer"
+              type="number"
+              min="1"
+              max="300"
+              placeholder="Or enter custom timer in minutes (e.g. 10, 90)"
+              value={customTime}
+              onChange={handleCustomTimeChange}
+            />
 
-            <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'right' }}>
-              Active Timer: <strong style={{ color: '#10b981', fontFamily: 'var(--font-mono)' }}>{activeDuration} minutes</strong>
+            <div className="timer-info">
+              Active Timer: <strong style={{ color: 'var(--success)' }}>{activeDuration} minutes</strong>
             </div>
           </div>
 
+          {/* Rating Range */}
           <div className="grid">
             <div className="form-group">
-              <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Sliders size={16} color="#10b981" /> Min Rating
+              <label className="label" htmlFor="solo-rating-min">
+                <Sliders size={16} color="var(--success)" /> Min Rating
               </label>
               <input
+                id="solo-rating-min"
                 type="number"
                 min="800"
                 max="3500"
@@ -141,10 +147,11 @@ export default function SoloPrep({ user, token }) {
               />
             </div>
             <div className="form-group">
-              <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Sliders size={16} color="#10b981" /> Max Rating
+              <label className="label" htmlFor="solo-rating-max">
+                <Sliders size={16} color="var(--success)" /> Max Rating
               </label>
               <input
+                id="solo-rating-max"
                 type="number"
                 min="800"
                 max="3500"
@@ -155,15 +162,8 @@ export default function SoloPrep({ user, token }) {
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              marginTop: '0.5rem'
-            }}
-          >
-            {loading ? 'Setting Up...' : 'Start Solo Practice'}
+          <button type="submit" className="btn--success" disabled={loading}>
+            {loading ? 'Setting Up…' : 'Start Solo Practice'}
           </button>
         </form>
       </div>

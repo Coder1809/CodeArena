@@ -45,98 +45,98 @@ export default function Login({ setToken, setUser }) {
   };
 
   return (
-    <div style={{ maxWidth: '420px', margin: '5rem auto', width: '100%' }}>
-      <div className="card" style={{ textAlign: 'center' }}>
-        <div style={{
-          width: '64px',
-          height: '64px',
-          background: 'var(--accent-gradient)',
-          borderRadius: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 1.25rem',
-          boxShadow: '0 8px 24px var(--accent-glow)'
-        }}>
-          <Swords size={32} color="#ffffff" />
+    <div className="page-wrapper page-wrapper--narrow">
+      <div className="card">
+        <div className="page-header">
+          <div className="page-header__icon">
+            <Swords size={28} color="var(--accent)" />
+          </div>
+          <h1 className="page-header__title">Code Arena</h1>
+          <p className="page-header__subtitle">
+            {isRegister ? 'Create your arena profile' : 'Sign in to challenge competitors'}
+          </p>
         </div>
-        <h1 className="title" style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>Code Arena</h1>
-        <p className="subtitle" style={{ marginBottom: '1.75rem' }}>
-          {isRegister ? 'Create your arena profile' : 'Sign in to challenge competitors'}
-        </p>
 
         {error && (
-          <div style={{
-            background: 'rgba(239, 68, 68, 0.12)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: '#ef4444',
-            padding: '0.75rem',
-            borderRadius: '10px',
-            marginBottom: '1.25rem',
-            fontSize: '0.85rem'
-          }}>
+          <div className="alert alert--error" role="alert">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
           {isRegister && (
-            <div className="form-group" style={{ textAlign: 'left' }}>
-              <label className="label">Username</label>
+            <div className="form-group">
+              <label className="label" htmlFor="login-username">Username</label>
               <input
+                id="login-username"
                 type="text"
                 placeholder="codemaster"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 required
+                autoComplete="username"
               />
             </div>
           )}
 
-          <div className="form-group" style={{ textAlign: 'left' }}>
-            <label className="label">Email Address</label>
+          <div className="form-group">
+            <label className="label" htmlFor="login-email">Email Address</label>
             <input
+              id="login-email"
               type="email"
               placeholder="user@example.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
+              autoComplete="email"
             />
           </div>
 
-          <div className="form-group" style={{ textAlign: 'left' }}>
-            <label className="label">Password</label>
+          <div className="form-group">
+            <label className="label" htmlFor="login-password">Password</label>
             <input
+              id="login-password"
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
+              autoComplete={isRegister ? 'new-password' : 'current-password'}
             />
           </div>
 
           {isRegister && (
-            <div className="form-group" style={{ textAlign: 'left' }}>
-              <label className="label">Codeforces Handle (Optional)</label>
+            <div className="form-group">
+              <label className="label" htmlFor="login-cf">Codeforces Handle (Optional)</label>
               <input
+                id="login-cf"
                 type="text"
                 placeholder="tourist"
                 value={cfHandle}
                 onChange={e => setCfHandle(e.target.value)}
+                autoComplete="off"
               />
             </div>
           )}
 
-          <button type="submit" disabled={loading} style={{ marginTop: '0.5rem' }}>
-            {loading ? 'Processing...' : (isRegister ? 'Register Account' : 'Sign In')}
+          <button type="submit" disabled={loading}>
+            {loading ? 'Processing…' : (isRegister ? 'Register Account' : 'Sign In')}
           </button>
         </form>
 
-        <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+        <div className="auth-toggle">
           {isRegister ? (
-            <p>Already have an account? <span style={{ color: '#a78bfa', cursor: 'pointer', fontWeight: 600 }} onClick={() => setIsRegister(false)}>Sign In</span></p>
+            <p>Already have an account?{' '}
+              <span onClick={() => setIsRegister(false)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setIsRegister(false)}>
+                Sign In
+              </span>
+            </p>
           ) : (
-            <p>Don't have an account? <span style={{ color: '#a78bfa', cursor: 'pointer', fontWeight: 600 }} onClick={() => setIsRegister(true)}>Register</span></p>
+            <p>Don&apos;t have an account?{' '}
+              <span onClick={() => setIsRegister(true)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setIsRegister(true)}>
+                Register
+              </span>
+            </p>
           )}
         </div>
       </div>

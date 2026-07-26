@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trophy, XCircle, Award, User, Code } from 'lucide-react';
+import { Trophy, XCircle, Award, Code } from 'lucide-react';
 import API_BASE_URL from '../config';
 
 export default function Dashboard({ user, setUser, token }) {
@@ -39,87 +39,81 @@ export default function Dashboard({ user, setUser, token }) {
   const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
 
   return (
-    <div style={{ maxWidth: '750px', margin: '2rem auto', width: '100%' }}>
+    <div className="page-wrapper page-wrapper--dashboard">
       <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '2rem' }}>
-          <div style={{
-            background: 'var(--accent-gradient)',
-            color: 'white',
-            borderRadius: '20px',
-            width: '64px',
-            height: '64px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.75rem',
-            fontWeight: '800',
-            fontFamily: 'var(--font-heading)',
-            boxShadow: '0 8px 24px var(--accent-glow)'
-          }}>
+        {/* Profile Header */}
+        <div className="profile-header">
+          <div className="profile-avatar" aria-hidden="true">
             {user?.username ? user.username.charAt(0).toUpperCase() : 'U'}
           </div>
-          <div>
-            <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, fontFamily: 'var(--font-heading)' }}>
-              {user?.username || 'Player'}
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', margin: '0.2rem 0 0 0', fontSize: '0.9rem' }}>
-              {user?.email}
-            </p>
+          <div className="profile-info">
+            <h1>{user?.username || 'Player'}</h1>
+            <p>{user?.email}</p>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2.25rem' }}>
+        {/* Stats Grid */}
+        <div className="stats-grid">
           <div className="stat-card">
-            <Award size={22} color="var(--accent-color)" style={{ marginBottom: '0.35rem' }} />
-            <div className="stat-value" style={{ color: '#a78bfa', fontSize: '1.4rem' }}>
+            <div className="stat-card__icon">
+              <Award size={22} color="var(--accent)" />
+            </div>
+            <div className="stat-value stat-value--sm" style={{ color: 'var(--accent)' }}>
               {user?.cf_handle ? `@${user.cf_handle}` : 'Not Set'}
             </div>
             <div className="stat-label">CF Handle</div>
           </div>
 
           <div className="stat-card">
-            <Trophy size={22} color="var(--success-color)" style={{ marginBottom: '0.35rem' }} />
-            <div className="stat-value" style={{ color: 'var(--success-color)', fontSize: '1.6rem' }}>{wins}</div>
+            <div className="stat-card__icon">
+              <Trophy size={22} color="var(--success)" />
+            </div>
+            <div className="stat-value" style={{ color: 'var(--success)' }}>{wins}</div>
             <div className="stat-label">Wins</div>
           </div>
 
           <div className="stat-card">
-            <XCircle size={22} color="var(--danger-color)" style={{ marginBottom: '0.35rem' }} />
-            <div className="stat-value" style={{ color: 'var(--danger-color)', fontSize: '1.6rem' }}>{losses}</div>
+            <div className="stat-card__icon">
+              <XCircle size={22} color="var(--danger)" />
+            </div>
+            <div className="stat-value" style={{ color: 'var(--danger)' }}>{losses}</div>
             <div className="stat-label">Losses</div>
           </div>
 
           <div className="stat-card">
-            <Code size={22} color="var(--warning-color)" style={{ marginBottom: '0.35rem' }} />
-            <div className="stat-value" style={{ color: 'var(--warning-color)', fontSize: '1.6rem' }}>{winRate}%</div>
+            <div className="stat-card__icon">
+              <Code size={22} color="var(--warning)" />
+            </div>
+            <div className="stat-value" style={{ color: 'var(--warning)' }}>{winRate}%</div>
             <div className="stat-label">Win Rate</div>
           </div>
         </div>
 
-        <form onSubmit={handleSaveCF} style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.75rem' }}>
-          <h3 style={{ fontSize: '1.15rem', marginBottom: '1rem', fontFamily: 'var(--font-heading)' }}>
-            Codeforces Integration
-          </h3>
+        {/* Codeforces Integration */}
+        <form onSubmit={handleSaveCF} className="section">
+          <h3 className="section__title">Codeforces Integration</h3>
+
           {msg && (
-            <p style={{
-              fontSize: '0.88rem',
-              color: msg.startsWith('Error') ? '#ef4444' : '#10b981',
-              marginBottom: '1rem',
-              fontWeight: 500
-            }}>{msg}</p>
+            <div className={`alert ${msg.startsWith('Error') ? 'alert--error' : 'alert--success'}`} role="status">
+              {msg}
+            </div>
           )}
+
           <div className="form-group">
-            <label className="label">Codeforces Handle</label>
+            <label className="label" htmlFor="cf-handle-input">Codeforces Handle</label>
             <input
+              id="cf-handle-input"
               type="text"
               placeholder="e.g. tourist, Benq"
               value={handleInput}
               onChange={e => setHandleInput(e.target.value)}
               required
+              autoComplete="off"
             />
           </div>
-          <button type="submit" disabled={loading} style={{ width: 'auto', padding: '0.75rem 2rem' }}>
-            {loading ? 'Saving...' : 'Update Handle'}
+
+          <button type="submit" className="btn--auto" disabled={loading}>
+            {loading ? 'Saving…' : 'Update Handle'}
           </button>
         </form>
       </div>

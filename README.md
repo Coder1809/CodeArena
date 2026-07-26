@@ -35,9 +35,16 @@ A real-time competitive programming platform where users compete in 1v1 coding d
 - Link your Codeforces handle
 
 ### 🎨 User Interface
-- Responsive dark theme
-- Glassmorphism design
-- Smooth animations
+- **Light & Dark themes** with instant toggle and system preference detection
+- Neutral charcoal dark theme with warm accent gradients
+- Clean white light theme with subtle surfaces
+- Theme preference persisted via localStorage
+- Fully responsive across all devices (320px–1536px)
+- Mobile-first design with hamburger navigation
+- CSS custom properties design system with 70+ design tokens
+- Smooth micro-animations (fade-in, slide-up, shimmer skeletons)
+- Consistent component library (buttons, inputs, cards, alerts, badges)
+- WCAG AA accessible — focus-visible rings, ARIA labels, semantic HTML, `prefers-reduced-motion` support
 
 ---
 
@@ -45,12 +52,37 @@ A real-time competitive programming platform where users compete in 1v1 coding d
 
 | Layer | Technology |
 |--------|------------|
-| Frontend | React 18, Vite, React Router |
+| Frontend | React 18, Vite, React Router, Lucide Icons |
 | Backend | Node.js, Express 5 |
 | Database | PostgreSQL |
 | Real-Time | Socket.IO |
 | Authentication | JWT + PBKDF2 |
 | External API | Codeforces API |
+
+---
+
+# Design System
+
+The frontend uses a comprehensive CSS custom properties design system:
+
+| Token Category | Examples |
+|---------------|----------|
+| Spacing | 4, 8, 12, 16, 20, 24, 32, 40, 48, 64px |
+| Typography | xs (0.75rem) → 4xl (2.25rem) with Outfit headings + Inter body + JetBrains Mono code |
+| Border Radius | 8px (small) · 12px (buttons/inputs) · 16px (cards) · 9999px (pills) |
+| Shadows | sm · md · lg · xl · glow |
+| Animations | fadeIn · fadeInUp · scaleIn · shimmer · spin |
+
+### Theme Colors
+
+| Token | Dark Theme | Light Theme |
+|-------|-----------|-------------|
+| `--bg-primary` | `#0c0c0f` (charcoal) | `#f8fafc` (off-white) |
+| `--bg-secondary` | `#161618` | `#ffffff` |
+| `--accent` | `#818cf8` (indigo) | `#6366f1` (indigo) |
+| `--success` | `#34d399` | `#059669` |
+| `--danger` | `#f87171` | `#dc2626` |
+| `--warning` | `#fbbf24` | `#d97706` |
 
 ---
 
@@ -69,9 +101,17 @@ CodeArena/
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
+│   │   │   ├── Login.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── CreateDuel.jsx
+│   │   │   ├── JoinDuel.jsx
+│   │   │   ├── SoloPrep.jsx
+│   │   │   ├── Leaderboard.jsx
+│   │   │   └── DuelRoom.jsx
 │   │   ├── App.jsx
 │   │   ├── config.js
 │   │   └── index.css
+│   ├── index.html
 │   └── vite.config.js
 │
 ├── init.sql
@@ -217,9 +257,10 @@ http://localhost:5173
 
 1. Register or log in.
 2. Link your Codeforces handle.
-3. Create or join a duel room.
-4. Solve the assigned problem.
-5. The server automatically verifies submissions and determines the winner.
+3. Toggle between light and dark themes using the Sun/Moon button in the navbar.
+4. Create or join a duel room.
+5. Solve the assigned problem.
+6. The server automatically verifies submissions and determines the winner.
 
 ---
 

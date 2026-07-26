@@ -26,37 +26,41 @@ export default function Leaderboard({ token }) {
   }, [token]);
 
   return (
-    <div style={{ maxWidth: '850px', margin: '2rem auto', width: '100%' }}>
+    <div className="page-wrapper page-wrapper--wide">
       <div className="card">
-        <h1 className="title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
-          <Trophy size={34} color="#f59e0b" />
-          Code Arena Standings
-        </h1>
-        <p className="subtitle" style={{ marginBottom: '1.75rem' }}>
-          Global competitive programmers ranked by arena victories
-        </p>
+        <div className="page-header">
+          <h1 className="page-header__title page-header__title--with-icon">
+            <Trophy size={30} color="var(--warning)" />
+            Code Arena Standings
+          </h1>
+          <p className="page-header__subtitle">
+            Global competitive programmers ranked by arena victories
+          </p>
+        </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-            Loading arena leaderboard...
+          <div aria-busy="true" aria-label="Loading leaderboard">
+            {[...Array(5)].map((_, i) => (
+              <div className="skeleton skeleton--row" key={i} />
+            ))}
           </div>
         ) : error ? (
-          <div style={{ color: '#ef4444', textAlign: 'center', padding: '1.5rem' }}>{error}</div>
+          <div className="alert alert--error" role="alert">{error}</div>
         ) : players.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+          <div className="empty-state">
             No arena matches recorded yet.
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table className="league-table">
+            <table className="league-table" role="table">
               <thead>
                 <tr>
-                  <th>Rank</th>
-                  <th>Player</th>
-                  <th>Codeforces Handle</th>
-                  <th style={{ textAlign: 'center' }}>Wins</th>
-                  <th style={{ textAlign: 'center' }}>Losses</th>
-                  <th style={{ textAlign: 'center' }}>Matches Played</th>
+                  <th scope="col">Rank</th>
+                  <th scope="col">Player</th>
+                  <th scope="col">Codeforces Handle</th>
+                  <th scope="col" style={{ textAlign: 'center' }}>Wins</th>
+                  <th scope="col" style={{ textAlign: 'center' }}>Losses</th>
+                  <th scope="col" style={{ textAlign: 'center' }}>Matches Played</th>
                 </tr>
               </thead>
               <tbody>
@@ -65,14 +69,14 @@ export default function Leaderboard({ token }) {
                     <td style={{ fontWeight: 'bold', fontFamily: 'var(--font-mono)' }}>
                       {index === 0 ? '🥇 1' : index === 1 ? '🥈 2' : index === 2 ? '🥉 3' : `#${index + 1}`}
                     </td>
-                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p.username}</td>
-                    <td style={{ color: 'var(--accent-color)', fontFamily: 'var(--font-mono)' }}>
+                    <td style={{ fontWeight: 600 }}>{p.username}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)' }}>
                       {p.cf_handle ? (
                         <a
                           href={`https://codeforces.com/profile/${p.cf_handle}`}
                           target="_blank"
                           rel="noreferrer"
-                          style={{ color: '#a78bfa', textDecoration: 'none' }}
+                          style={{ color: 'var(--accent)' }}
                         >
                           @{p.cf_handle}
                         </a>
@@ -80,10 +84,10 @@ export default function Leaderboard({ token }) {
                         '—'
                       )}
                     </td>
-                    <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--success-color)', fontFamily: 'var(--font-mono)' }}>
+                    <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--success)', fontFamily: 'var(--font-mono)' }}>
                       {p.wins || 0}
                     </td>
-                    <td style={{ textAlign: 'center', color: 'var(--danger-color)', fontFamily: 'var(--font-mono)' }}>
+                    <td style={{ textAlign: 'center', color: 'var(--danger)', fontFamily: 'var(--font-mono)' }}>
                       {p.losses || 0}
                     </td>
                     <td style={{ textAlign: 'center', fontWeight: 'bold', fontFamily: 'var(--font-mono)' }}>
