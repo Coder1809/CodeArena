@@ -2,6 +2,10 @@
 
 A real-time competitive programming platform where users compete in 1v1 coding duels using Codeforces problems.
 
+### 🌐 Live Demo
+
+**Website:** [code-arena-ochre.vercel.app](https://code-arena-ochre.vercel.app)
+
 ---
 
 ## Features
