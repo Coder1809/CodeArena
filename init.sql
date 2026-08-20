@@ -1,0 +1,35 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+DROP TABLE IF EXISTS matches CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS league_players CASCADE;
+DROP TABLE IF EXISTS leagues CASCADE;
+DROP TABLE IF EXISTS match_players CASCADE;
+DROP TABLE IF EXISTS match_problems CASCADE;
+DROP TABLE IF EXISTS match_logs CASCADE;
+DROP TABLE IF EXISTS friendships CASCADE;
+DROP TABLE IF EXISTS invitations CASCADE;
+DROP TABLE IF EXISTS verification_tokens CASCADE;
+
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    cf_handle VARCHAR(255),
+    wins INT DEFAULT 0,
+    losses INT DEFAULT 0,
+    draws INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE matches (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    player1 UUID REFERENCES users(id) ON DELETE SET NULL,
+    player2 UUID REFERENCES users(id) ON DELETE SET NULL,
+    problem_id VARCHAR(255),
+    winner UUID REFERENCES users(id) ON DELETE SET NULL,
+    start_time TIMESTAMP,
+    end_time TIMESTAMP,
+    status VARCHAR(50) DEFAULT 'WAITING'
+);
