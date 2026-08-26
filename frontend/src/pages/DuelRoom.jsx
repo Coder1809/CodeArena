@@ -132,17 +132,22 @@ export default function DuelRoom({ user, token }) {
       <div className="card">
         {/* Room Header */}
         <div className="room-header">
-          <div>
+          <div className="room-header__title-section">
             <h2>Arena Room</h2>
-            <span className="room-header__id">{roomId}</span>
-            <button
-              className="copy-btn"
-              onClick={copyRoomId}
-              aria-label={copied ? 'Room ID copied' : 'Copy Room ID'}
-            >
-              {copied ? <Check size={14} color="var(--success)" /> : <Copy size={14} />}
-              {copied ? 'Copied Room ID' : 'Copy Room ID'}
-            </button>
+            <div className="room-code-container">
+              <span className="room-code-label">Room Code:</span>
+              <span className="room-header__id">{roomId}</span>
+              <button
+                type="button"
+                className={`copy-btn ${copied ? 'copy-btn--copied' : ''}`}
+                onClick={copyRoomId}
+                aria-label={copied ? 'Room ID copied' : 'Copy Room ID'}
+                title="Copy Room ID"
+              >
+                {copied ? <Check size={14} color="var(--success)" /> : <Copy size={14} />}
+                <span>{copied ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
           </div>
 
           <div className={`status-badge ${statusClass}`}>
