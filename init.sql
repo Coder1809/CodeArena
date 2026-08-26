@@ -2,14 +2,6 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 DROP TABLE IF EXISTS matches CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS league_players CASCADE;
-DROP TABLE IF EXISTS leagues CASCADE;
-DROP TABLE IF EXISTS match_players CASCADE;
-DROP TABLE IF EXISTS match_problems CASCADE;
-DROP TABLE IF EXISTS match_logs CASCADE;
-DROP TABLE IF EXISTS friendships CASCADE;
-DROP TABLE IF EXISTS invitations CASCADE;
-DROP TABLE IF EXISTS verification_tokens CASCADE;
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -25,6 +17,7 @@ CREATE TABLE users (
 
 CREATE TABLE matches (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    room_code VARCHAR(6) UNIQUE NOT NULL,
     player1 UUID REFERENCES users(id) ON DELETE SET NULL,
     player2 UUID REFERENCES users(id) ON DELETE SET NULL,
     problem_id VARCHAR(255),
@@ -33,3 +26,8 @@ CREATE TABLE matches (
     end_time TIMESTAMP,
     status VARCHAR(50) DEFAULT 'WAITING'
 );
+
+-- Indexes for frequently queried columns
+CREATE INDEX idx_matches_room_code ON matches(room_code);
+CREATE INDEX idx_matches_status ON matches(status);
+CREATE INDEX idx_users_email ON users(email);

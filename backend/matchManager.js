@@ -9,16 +9,40 @@ class MatchManager {
     setInterval(() => this.pollActiveMatches(), 5000);
   }
 
+  // Generate a random 6-character alphanumeric room code
+  // Excludes I, O, 0, 1 to avoid visual confusion
+  generateRoomCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  // Generate a unique room code that doesn't exist in the database
+  async generateUniqueRoomCode() {
+    for (let attempts = 0; attempts < 10; attempts++) {
+      const code = this.generateRoomCode();
+      const existing = await db.query('SELECT id FROM matches WHERE room_code = $1', [code]);
+      if (existing.rows.length === 0) return code;
+    }
+    throw new Error('Failed to generate unique room code');
+  }
+
   async createMatch(creatorId, timeLimit = 45, ratingMin = 800, ratingMax = 1200, isSolo = false) {
+    const roomCode = await this.generateUniqueRoomCode();
+
     const res = await db.query(
-      `INSERT INTO matches (player1, status, start_time)
-       VALUES ($1, 'WAITING', NOW()) RETURNING *`,
-      [creatorId || null]
+      `INSERT INTO matches (player1, room_code, status, start_time)
+       VALUES ($1, $2, 'WAITING', NOW()) RETURNING *`,
+      [creatorId || null, roomCode]
     );
     const match = res.rows[0];
 
     const roomState = {
-      roomId: match.id,
+      roomId: roomCode,
+      matchId: match.id,
       player1: creatorId ? await this.getUserData(creatorId) : null,
       player2: null,
       isSolo: !!isSolo,
@@ -33,7 +57,7 @@ class MatchManager {
       timerId: null
     };
 
-    this.activeMatches.set(match.id, roomState);
+    this.activeMatches.set(roomCode, roomState);
     return roomState;
   }
 
@@ -46,12 +70,14 @@ class MatchManager {
   async joinMatch(roomId, userId) {
     let room = this.activeMatches.get(roomId);
     if (!room) {
-      const res = await db.query('SELECT * FROM matches WHERE id = $1', [roomId]);
+      // Look up by room_code instead of UUID
+      const res = await db.query('SELECT * FROM matches WHERE room_code = $1', [roomId]);
       if (res.rows.length === 0) throw new Error('Room not found');
       const m = res.rows[0];
 
       room = {
-        roomId: m.id,
+        roomId: m.room_code,
+        matchId: m.id,
         player1: await this.getUserData(m.player1),
         player2: await this.getUserData(m.player2),
         isSolo: false,
@@ -74,10 +100,10 @@ class MatchManager {
 
       if (!room.player1 || room.player1.id === userId) {
         room.player1 = userData;
-        await db.query('UPDATE matches SET player1 = $1 WHERE id = $2', [userId, roomId]);
+        await db.query('UPDATE matches SET player1 = $1 WHERE id = $2', [userId, room.matchId]);
       } else if (!room.player2 || room.player2.id === userId) {
         room.player2 = userData;
-        await db.query('UPDATE matches SET player2 = $1 WHERE id = $2', [userId, roomId]);
+        await db.query('UPDATE matches SET player2 = $1 WHERE id = $2', [userId, room.matchId]);
       } else {
         throw new Error('Room is full');
       }
@@ -93,7 +119,7 @@ class MatchManager {
 
     room.status = 'ACTIVE';
     room.startTime = Date.now();
-    await db.query(`UPDATE matches SET status = 'ACTIVE', start_time = NOW() WHERE id = $1`, [roomId]);
+    await db.query(`UPDATE matches SET status = 'ACTIVE', start_time = NOW() WHERE id = $1`, [room.matchId]);
 
     // Select random problem from Codeforces
     const problem = cfService.getRandomProblem(room.ratingMin, room.ratingMax, new Set());
@@ -106,7 +132,7 @@ class MatchManager {
         name: problem.name,
         rating: problem.rating
       };
-      await db.query('UPDATE matches SET problem_id = $1 WHERE id = $2', [probId, roomId]);
+      await db.query('UPDATE matches SET problem_id = $1 WHERE id = $2', [probId, room.matchId]);
     }
 
     // Emit socket events
@@ -170,7 +196,7 @@ class MatchManager {
 
     await db.query(
       `UPDATE matches SET status = 'FINISHED', winner = $1, end_time = NOW() WHERE id = $2`,
-      [winnerId, roomId]
+      [winnerId, room.matchId]
     );
 
     if (winnerId) {

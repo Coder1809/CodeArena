@@ -9,20 +9,20 @@
 
 ## 1. Project Overview & System Architecture
 
-CodeArena transforms solitary algorithm practice into an interactive, high-stakes competitive duel. Players can create custom rooms or join open lobbies, configure problem rating difficulties, and race against the clock. The backend engine continuously polls the official Codeforces REST API to automatically detect accepted verdicts (`OK`) in real-time.
+CodeArena transforms solitary algorithm practice into an interactive, high-stakes competitive duel. Players can create custom rooms and share a 6-character room code, configure problem rating difficulties, and race against the clock. The backend engine continuously polls the official Codeforces REST API to automatically detect accepted verdicts (`OK`) in real-time.
 
 ### High-Level Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    React 18 Single Page App                 │
-│         (Vite + Tailwind CSS + Lucide Icons + Axios)        │
+│              (Vite + Tailwind CSS + Lucide Icons)           │
 └───────────────┬─────────────────────────────▲───────────────┘
                 │ REST API / WebSockets       │ JSON / Socket Events
                 ▼                             │
 ┌─────────────────────────────────────────────┴───────────────┐
 │                   Node.js & Express Server                  │
-│    ├── JWT Authentication & Codeforces Handle Verification  │
+│    ├── JWT Authentication & PBKDF2 Password Hashing         │
 │    ├── Real-Time Duel Engine & Room State Machine           │
 │    ├── Background Codeforces API Poller (every 5s)          │
 │    └── PostgreSQL Database Layer (Neon Serverless)          │
@@ -43,15 +43,13 @@ CodeArena transforms solitary algorithm practice into an interactive, high-stake
 - **Custom Duel Settings:** Choose problem difficulty ratings (800–3500) and match durations (1–300 mins).
 - **Synchronized Match Lifecycle:**
   1. **Lobby (`WAITING`):** Host creates room and shares 6-character room code; opponent joins.
-  2. **Countdown (`STARTING`):** Synchronized 5-second countdown across both clients.
-  3. **Live Duel (`IN_PROGRESS`):** Codeforces problem unveiled with synchronized countdown timer.
-  4. **Automated Verification:** The server polls Codeforces every 5 seconds for accepted submissions (`verdict: OK`).
-  5. **Resolution (`FINISHED` / `DRAW`):** Winner declared instantly upon solve; if timer expires without a solution, the match resolves as a **Draw**.
-  6. **Forfeit Handling:** If a player leaves mid-match, the opponent receives the victory.
+  2. **Live Duel (`ACTIVE`):** Codeforces problem unveiled with synchronized countdown timer.
+  3. **Automated Verification:** The server polls Codeforces every 5 seconds for accepted submissions (`verdict: OK`).
+  4. **Resolution (`FINISHED`):** Winner declared instantly upon solve; if timer expires without a solution, the match resolves as a **Draw** (winner is `null`).
 
 ### B. Leaderboard & Stats Engine
-- **Rankings Table:** Global top rankings featuring **Rank, Player, Codeforces Handle, Wins, Losses, Draws, Matches Played, and Win Rate %**.
-- **Real-Time Profile Stats:** Track your personal match history, win streaks, and competitive record.
+- **Rankings Table:** Global top 50 rankings featuring **Rank, Player, Codeforces Handle, Wins, Losses, Draws, and Matches Played**.
+- **Profile Dashboard:** Track your personal match history and competitive record.
 
 ### C. Solo Practice Mode
 - Customizable timed solo practice sessions with automatic Codeforces submission verification.
@@ -82,7 +80,8 @@ CodeArena utilizes a relational PostgreSQL schema:
 │                            matches                            │
 ├───────────────────┬─────────────────────────────┬─────────────┤
 │ id                │ UUID (PK, uuid_generate_v4) │ PRIMARY KEY │
-│ player1           │ UUID (FK -> users.id)       │ NOT NULL    │
+│ room_code         │ VARCHAR(6)                  │ UNIQUE      │
+│ player1           │ UUID (FK -> users.id)       │ NULLABLE    │
 │ player2           │ UUID (FK -> users.id)       │ NULLABLE    │
 │ problem_id        │ VARCHAR(255)                │ Problem Ref │
 │ winner            │ UUID (FK -> users.id)       │ Winner User │
@@ -102,16 +101,17 @@ CodeArena utilizes a relational PostgreSQL schema:
 | `POST` | `/auth/register` | Register new user account | No |
 | `POST` | `/auth/login` | Authenticate user & return JWT | No |
 | `GET` | `/auth/me` | Get authenticated player stats | Yes (JWT) |
-| `POST` | `/auth/update-cf` | Link verified Codeforces handle | Yes (JWT) |
+| `POST` | `/auth/update-cf` | Link Codeforces handle to account | Yes (JWT) |
 
 ### Duel Rooms & Matchmaking
 | Method | Endpoint | Description | Auth Required |
 |---|---|---|---|
 | `POST` | `/create-room` | Create new duel room with custom rating/timer | Yes (JWT) |
-| `POST` | `/join-room` | Join an existing duel room via room code | Yes (JWT) |
-| `GET` | `/room/:id` | Get room configuration and participants | Yes (JWT) |
-| `GET` | `/leaderboard` | Get global rankings (Wins, Losses, Draws, Win Rate) | No |
-| `GET` | `/problem` | Fetch random Codeforces problem by rating | No |
+| `POST` | `/join-room` | Join an existing duel room via 6-character room code | Yes (JWT) |
+| `GET` | `/room/:id` | Get room configuration and participants by room code | Yes (JWT) |
+| `GET` | `/winner` | Get winner details for a room by room code | No |
+| `GET` | `/leaderboard` | Get global rankings (Wins, Losses, Draws) | No |
+| `GET` | `/problem` | Fetch random Codeforces problem by rating range | No |
 
 ---
 
@@ -119,34 +119,32 @@ CodeArena utilizes a relational PostgreSQL schema:
 
 | Event Name | Direction | Payload / Description |
 |---|---|---|
-| `join-room` | Client → Server | `{ roomId, user }` - Join duel room |
-| `player-joined` | Server → Room | `{ player }` - Notify room of opponent arrival |
-| `start-match` | Client → Server | `{ roomId }` - Host triggers start |
-| `match-started` | Server → Room | `{ problem, startTime, duration }` - Synchronized start |
-| `match-won` | Server → Room | `{ winner, problemUrl }` - Problem solved verdict |
-| `match-draw` | Server → Room | `{ message }` - Match ended in a draw on timeout |
-| `match-ended` | Server → Room | `{ reason }` - Match termination/forfeit |
-| `leave-room` | Client → Server | `{ roomId }` - Player leaves room |
+| `join-room` | Client → Server | `{ roomId, userId }` — Join duel room via room code |
+| `room-updated` | Server → Room | `{ room }` — Notify room of updated state (player joined) |
+| `start-match` | Client → Server | `{ roomId }` — Host triggers match start |
+| `start-match` | Server → Room | `{ room }` — Synchronized match start with problem |
+| `problem-selected` | Server → Room | `{ contestId, index, name, rating }` — Problem details |
+| `submission-found` | Server → Room | `{ player, cfHandle, problem }` — Accepted submission detected |
+| `match-ended` | Server → Room | `{ roomId, winner, winnerId }` — Match finished (win or draw) |
 
 ---
 
 ## 6. Technology Stack
 
 - **Frontend:**
-  - React 18 (Hooks, Context, Dynamic Components)
+  - React 18 (Hooks, Functional Components)
   - Vite (Build & Development Server)
-  - React Router v6 / v7 (Client-side routing)
+  - React Router v6 (Client-side routing)
   - Tailwind CSS (Dark theme gaming aesthetic)
-  - Socket.IO Client (Low-latency bidirectional WebSocket connection)
-  - Axios (HTTP client with JWT authorization interceptors)
-  - Lucide React (Swords, trophies, timers, and game icons)
+  - Socket.IO Client (Bidirectional WebSocket connection)
+  - Lucide React (Icons)
 - **Backend:**
   - Node.js & Express.js (REST API & WebSocket gateway)
-  - Socket.IO (Room isolation, broadcast channels, countdown timers)
-  - PostgreSQL & `pg` (Relational persistence with atomic transaction updates)
+  - Socket.IO (Room isolation, broadcast channels, match timers)
+  - PostgreSQL & `pg` (Relational persistence)
   - Neon Database (Serverless PostgreSQL with connection pooling)
-  - `bcrypt` & `jsonwebtoken` (Password hashing & stateless authentication)
-  - Codeforces REST API (Live submission verification)
+  - `crypto` PBKDF2 & `jsonwebtoken` (Password hashing & stateless JWT authentication)
+  - Codeforces REST API (Problem fetching & live submission verification)
 
 ---
 
@@ -176,7 +174,7 @@ VITE_API_URL=http://localhost:3000
 
 ### 2. Database Initialization
 
-Run the initialization script to create required tables and extensions:
+Run the initialization script to create required tables, indexes, and extensions:
 ```bash
 psql -U postgres -d cp_duel -f init.sql
 ```

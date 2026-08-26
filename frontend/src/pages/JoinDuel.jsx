@@ -59,7 +59,7 @@ export default function JoinDuel({ user, token }) {
             <input
               id="join-room-id"
               type="text"
-              placeholder="Paste Room UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
+              placeholder="Enter 6-character Room Code (e.g. ABC123)"
               value={roomIdInput}
               onChange={e => setRoomIdInput(e.target.value)}
               required
