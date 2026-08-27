@@ -57,37 +57,19 @@ cfService.initCodeforces();
 // =======================
 app.use("/auth", auth.router);
 
-app.post("/login", (req, res, next) => {
-  req.url = "/login";
-  auth.router(req, res, next);
-});
 
-app.post("/register", (req, res, next) => {
-  req.url = "/register";
-  auth.router(req, res, next);
-});
-
-app.get("/me", (req, res, next) => {
-  req.url = "/me";
-  auth.router(req, res, next);
-});
-
-app.post("/update-cf", (req, res, next) => {
-  req.url = "/update-cf";
-  auth.router(req, res, next);
-});
 
 // =======================
 // Arena API Endpoints
 // =======================
 
 // Create Room
-app.post("/create-room", async (req, res) => {
+app.post("/create-room", auth.authenticate, async (req, res) => {
   try {
-    const { userId, timeLimit, ratingMin, ratingMax, isSolo } = req.body;
+    const { timeLimit, ratingMin, ratingMax, isSolo } = req.body;
 
     const room = await matchManager.createMatch(
-      userId,
+      req.user.id,
       timeLimit,
       ratingMin,
       ratingMax,
@@ -106,11 +88,11 @@ app.post("/create-room", async (req, res) => {
 });
 
 // Join Room
-app.post("/join-room", async (req, res) => {
+app.post("/join-room", auth.authenticate, async (req, res) => {
   try {
-    const { roomId, userId } = req.body;
+    const { roomId } = req.body;
 
-    const room = await matchManager.joinMatch(roomId, userId);
+    const room = await matchManager.joinMatch(roomId, req.user.id);
 
     res.json({
       success: true,
@@ -124,7 +106,7 @@ app.post("/join-room", async (req, res) => {
 });
 
 // Room Details
-app.get("/room/:id", async (req, res) => {
+app.get("/room/:id", auth.authenticate, async (req, res) => {
   try {
     const roomId = req.params.id;
 

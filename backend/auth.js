@@ -12,6 +12,22 @@ function hashPassword(password) {
   return crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
 }
 
+// Reusable JWT authentication middleware
+// Verifies the token and attaches decoded user data to req.user
+function authenticate(req, res, next) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Authentication required' });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded; // { id, email, username }
+    next();
+  } catch (e) {
+    res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+
 // POST /auth/register
 router.post('/register', async (req, res) => {
   try {
@@ -69,39 +85,29 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// GET /auth/me
-router.get('/me', async (req, res) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'No token provided' });
-
+// GET /auth/me — uses authenticate middleware
+router.get('/me', authenticate, async (req, res) => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
     const userRes = await db.query(
       `SELECT id, username, email, cf_handle, wins, losses, COALESCE(draws, 0) AS draws FROM users WHERE id = $1`,
-      [decoded.id]
+      [req.user.id]
     );
     if (userRes.rows.length === 0) return res.status(404).json({ error: 'User not found' });
     res.json(userRes.rows[0]);
   } catch (e) {
-    res.status(401).json({ error: 'Invalid token' });
+    res.status(500).json({ error: e.message });
   }
 });
 
-// POST /auth/update-cf
-router.post('/update-cf', async (req, res) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'No token provided' });
-
+// POST /auth/update-cf — uses authenticate middleware
+router.post('/update-cf', authenticate, async (req, res) => {
   const { cfHandle } = req.body;
   if (!cfHandle) return res.status(400).json({ error: 'Codeforces handle is required' });
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
     const updated = await db.query(
       `UPDATE users SET cf_handle = $1 WHERE id = $2 RETURNING id, username, email, cf_handle, wins, losses, COALESCE(draws, 0) AS draws`,
-      [cfHandle.trim(), decoded.id]
+      [cfHandle.trim(), req.user.id]
     );
     res.json({ success: true, user: updated.rows[0] });
   } catch (e) {
@@ -109,4 +115,4 @@ router.post('/update-cf', async (req, res) => {
   }
 });
 
-module.exports = { router, JWT_SECRET };
+module.exports = { router, authenticate, JWT_SECRET };

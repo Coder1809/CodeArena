@@ -21,7 +21,7 @@ export default function JoinDuel({ user, token }) {
       const res = await fetch(`${API_BASE_URL}/join-room`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ roomId: cleanRoomId, userId: user?.id })
+        body: JSON.stringify({ roomId: cleanRoomId })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not join room');

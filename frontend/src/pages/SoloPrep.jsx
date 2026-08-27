@@ -39,7 +39,6 @@ export default function SoloPrep({ user, token }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          userId: user.id,
           timeLimit: finalMins,
           ratingMin,
           ratingMax,
