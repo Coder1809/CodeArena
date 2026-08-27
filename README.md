@@ -160,8 +160,8 @@ CodeArena utilizes a relational PostgreSQL schema:
 **Backend (`backend/.env`):**
 ```env
 PORT=3000
-JWT_SECRET=supersecret_duel_key_99
-DATABASE_URL=postgresql://user:password@localhost:5432/cp_duel
+JWT_SECRET=your_jwt_secret_here
+DATABASE_URL=postgresql://username:password@localhost:5432/database_name
 CLIENT_URL=http://localhost:5173
 ```
 
