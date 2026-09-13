@@ -16,6 +16,7 @@ export default function Login({ setToken, setUser }) {
 
   // OTP Verification state
   const [otp, setOtp] = useState('');
+  const [previewOtp, setPreviewOtp] = useState('');
   const [resendCooldown, setResendCooldown] = useState(60);
   const [resending, setResending] = useState(false);
 
@@ -158,6 +159,7 @@ export default function Login({ setToken, setUser }) {
       if (data.requireOtp) {
         setStep('otp');
         setOtp('');
+        if (data.previewOtp) setPreviewOtp(data.previewOtp);
         setResendCooldown(60);
         setNotice(data.message || 'Verification code sent to your email.');
         return;
@@ -232,6 +234,7 @@ export default function Login({ setToken, setUser }) {
         throw new Error(data.error || 'Could not resend code');
       }
       setResendCooldown(60);
+      if (data.previewOtp) setPreviewOtp(data.previewOtp);
       setNotice(data.message || 'A new 6-digit verification code has been sent!');
     } catch (err) {
       setError(err.message);
@@ -249,6 +252,7 @@ export default function Login({ setToken, setUser }) {
     setError('');
     setNotice('');
     setOtp('');
+    setPreviewOtp('');
     setConfirmPassword('');
     setCfVerified(null);
   };
@@ -272,6 +276,27 @@ export default function Login({ setToken, setUser }) {
                 <span className="otp-target-email">{email}</span>
               </p>
             </div>
+
+            {previewOtp && (
+              <div className="otp-preview-banner">
+                <div className="otp-preview-info">
+                  <span className="otp-preview-badge">Demo Preview</span>
+                  <span className="otp-preview-text">
+                    Code: <strong>{previewOtp}</strong>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="otp-autofill-btn"
+                  onClick={() => {
+                    setOtp(previewOtp);
+                    setError('');
+                  }}
+                >
+                  Autofill
+                </button>
+              </div>
+            )}
 
             {error && (
               <div className="alert alert--error" role="alert" style={{ width: '100%' }}>

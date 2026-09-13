@@ -169,6 +169,7 @@ router.post('/register', async (req, res) => {
       requireOtp: true,
       email: cleanEmail,
       message: 'A 6-digit verification code has been sent to your email.',
+      previewOtp: otp,
       notice: mailResult.notice || null
     });
   } catch (error) {
@@ -278,6 +279,7 @@ router.post('/resend-otp', async (req, res) => {
     res.json({
       success: true,
       message: 'A new 6-digit verification code has been sent to your email.',
+      previewOtp: newOtp,
       notice: mailResult.notice || null
     });
   } catch (error) {
