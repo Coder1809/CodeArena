@@ -54,9 +54,6 @@ export default function JoinDuel({ user, token }) {
         )}
 
         <form onSubmit={handleJoin}>
-          <p className="form-required-hint">
-            <span className="label__required" aria-hidden="true">*</span> indicates a required field
-          </p>
           <div className="form-group">
             <label className="label" htmlFor="join-room-id">
               Arena Room ID <span className="label__required" aria-hidden="true">*</span>
@@ -75,6 +72,10 @@ export default function JoinDuel({ user, token }) {
           <button type="submit" className="btn--success" disabled={loading}>
             {loading ? 'Joining Arena…' : 'Join Arena Room'}
           </button>
+
+          <p className="form-required-hint">
+            <span className="label__required">*</span> Required fields
+          </p>
         </form>
       </div>
     </div>
