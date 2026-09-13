@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const dns = require('dns').promises;
 const db = require('./db');
 const mailer = require('./mailer');
 
@@ -123,6 +124,20 @@ router.post('/register', async (req, res) => {
 
     const cleanEmail = email.toLowerCase().trim();
     const cleanUsername = username.trim();
+
+    // Verify email domain has active mail exchange (MX) servers
+    const emailDomain = cleanEmail.split('@')[1];
+    if (!emailDomain) {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
+    try {
+      const mxRecords = await dns.resolveMx(emailDomain);
+      if (!mxRecords || mxRecords.length === 0) {
+        return res.status(400).json({ error: 'The email domain does not have active mail servers.' });
+      }
+    } catch {
+      return res.status(400).json({ error: 'Invalid or unreachable email domain. Please enter a valid email.' });
+    }
 
     // Check if email already registered in active users
     const existingUser = await db.query('SELECT id FROM users WHERE email = $1', [cleanEmail]);
