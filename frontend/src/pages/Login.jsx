@@ -155,6 +155,10 @@ export default function Login({ setToken, setUser }) {
         )}
 
         <form onSubmit={handleSubmit} noValidate>
+          <p className="form-required-hint">
+            <span className="label__required" aria-hidden="true">*</span> indicates a required field
+          </p>
+
           {isRegister && (
             <div className="form-group">
               <label className="label" htmlFor="login-username">
