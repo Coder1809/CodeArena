@@ -88,8 +88,13 @@ async function sendVerificationOtp(email, username, otp) {
                       ⏱️ This code is valid for <strong>${expiryMinutes} minutes</strong>. Do not share this code with anyone.
                     </p>
 
-                    <p style="margin: 24px 0 0 0; font-size: 12px; line-height: 1.5; color: #4B5563; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 20px;">
+                    <p style="margin: 24px 0 0 0; font-size: 12px; line-height: 1.5; color: #4B5563; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 16px;">
                       If you did not request this verification code, please ignore this email. Someone may have entered your email address by mistake.
+                    </p>
+
+                    <p style="margin: 16px 0 0 0; font-size: 13px; color: #9CA3AF; line-height: 1.5;">
+                      Happy Coding,<br />
+                      <strong style="color: #F59E0B;">Team CodeArena</strong>
                     </p>
                   </td>
                 </tr>
@@ -97,7 +102,7 @@ async function sendVerificationOtp(email, username, otp) {
                 <!-- Footer -->
                 <tr>
                   <td style="padding: 16px 32px 24px 32px; background-color: #0d121f; text-align: center; font-size: 12px; color: #6B7280;">
-                    &copy; ${new Date().getFullYear()} CodeArena. All rights reserved.
+                    &copy; ${new Date().getFullYear()} Team CodeArena. All rights reserved.
                   </td>
                 </tr>
               </table>
@@ -110,10 +115,10 @@ async function sendVerificationOtp(email, username, otp) {
 
   try {
     const info = await transporter.sendMail({
-      from: `"CodeArena" <${senderEmail}>`,
+      from: `"Team CodeArena" <${senderEmail}>`,
       to: email,
-      subject: `Your CodeArena Verification Code: ${otp}`,
-      text: `Your CodeArena verification code is: ${otp}. It expires in ${expiryMinutes} minutes.`,
+      subject: `${otp} is your CodeArena verification code`,
+      text: `Hi ${username || 'Coder'},\n\nYour CodeArena verification code is: ${otp}. It expires in ${expiryMinutes} minutes.\n\nHappy Coding,\nTeam CodeArena`,
       html: htmlContent
     });
     console.log('✅ [CodeArena Mailer] Email dispatched successfully! Message ID:', info.messageId);
