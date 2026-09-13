@@ -16,16 +16,18 @@ CodeArena transforms solitary algorithm practice into an interactive, high-stake
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    React 18 Single Page App                 │
-│              (Vite + Tailwind CSS + Lucide Icons)           │
+│            (Vite + Custom CSS Design System + Lucide Icons) │
 └───────────────┬─────────────────────────────▲───────────────┘
                 │ REST API / WebSockets       │ JSON / Socket Events
                 ▼                             │
 ┌─────────────────────────────────────────────┴───────────────┐
 │                   Node.js & Express Server                  │
-│    ├── JWT Authentication & PBKDF2 Password Hashing         │
-│    ├── Real-Time Duel Engine & Room State Machine           │
+│    ├── JWT Authentication & bcrypt Password Hashing         │
+│    ├── Socket.IO Auth Middleware (JWT Handshake)             │
+│    ├── Real-Time Duel Engine & Room State Machine            │
 │    ├── Background Codeforces API Poller (every 5s)          │
-│    └── PostgreSQL Database Layer (Neon Serverless)          │
+│    ├── Rate-Limited Auth Routes (express-rate-limit)         │
+│    └── PostgreSQL Database Layer (Neon Serverless)           │
 └───────────────┬─────────────────────────────▲───────────────┘
                 │ Polling                     │ SQL Queries
                 ▼                             ▼
@@ -54,11 +56,14 @@ CodeArena transforms solitary algorithm practice into an interactive, high-stake
 ### C. Solo Practice Mode
 - Customizable timed solo practice sessions with automatic Codeforces submission verification.
 
+### D. Codeforces Handle Verification
+- Real-time handle verification via the Codeforces `user.info` API during registration and profile updates, with debounced inline feedback (rating, rank, and validity).
+
 ---
 
 ## 3. Database Schema & Data Models
 
-CodeArena utilizes a relational PostgreSQL schema:
+CodeArena utilizes a relational PostgreSQL schema with atomic transactions for match resolution:
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
@@ -112,10 +117,13 @@ CodeArena utilizes a relational PostgreSQL schema:
 | `GET` | `/winner` | Get winner details for a room by room code | No |
 | `GET` | `/leaderboard` | Get global rankings (Wins, Losses, Draws) | No |
 | `GET` | `/problem` | Fetch random Codeforces problem by rating range | No |
+| `GET` | `/verify-cf` | Verify a Codeforces handle exists via CF API | No |
 
 ---
 
 ## 5. Real-Time Socket.IO Protocol
+
+All Socket.IO connections are authenticated via JWT middleware — the client must provide a valid token in the handshake `auth` object.
 
 | Event Name | Direction | Payload / Description |
 |---|---|---|
@@ -135,16 +143,17 @@ CodeArena utilizes a relational PostgreSQL schema:
   - React 18 (Hooks, Functional Components)
   - Vite (Build & Development Server)
   - React Router v6 (Client-side routing)
-  - Tailwind CSS (Dark theme gaming aesthetic)
-  - Socket.IO Client (Bidirectional WebSocket connection)
+  - Custom CSS Design System (1,500+ lines — dual-theme dark/light mode, design tokens, responsive)
+  - Socket.IO Client (Authenticated WebSocket connection)
   - Lucide React (Icons)
 - **Backend:**
   - Node.js & Express.js (REST API & WebSocket gateway)
-  - Socket.IO (Room isolation, broadcast channels, match timers)
-  - PostgreSQL & `pg` (Relational persistence)
+  - Socket.IO (JWT-authenticated connections, room isolation, broadcast channels, match timers)
+  - PostgreSQL & `pg` (Relational persistence with transactions)
   - Neon Database (Serverless PostgreSQL with connection pooling)
-  - `crypto` PBKDF2 & `jsonwebtoken` (Password hashing & stateless JWT authentication)
-  - Codeforces REST API (Problem fetching & live submission verification)
+  - `bcryptjs` & `jsonwebtoken` (Password hashing & stateless JWT authentication)
+  - `express-rate-limit` (Rate limiting on authentication endpoints)
+  - Codeforces REST API (Problem fetching, live submission verification, handle verification)
 
 ---
 
@@ -176,7 +185,8 @@ VITE_API_URL=http://localhost:3000
 
 Run the initialization script to create required tables, indexes, and extensions:
 ```bash
-psql -U postgres -d cp_duel -f init.sql
+# Run schema initialization against your database (Neon or local PostgreSQL):
+psql "$DATABASE_URL" -f init.sql
 ```
 
 ---

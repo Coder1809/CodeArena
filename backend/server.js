@@ -2,6 +2,8 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+const rateLimit = require("express-rate-limit");
 
 const cfService = require("./services/codeforces");
 const MatchManager = require("./matchManager");
@@ -49,13 +51,41 @@ const io = new Server(server, {
   },
 });
 
+// =======================
+// Socket.IO Authentication Middleware
+// =======================
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+  if (!token) {
+    return next(new Error('Authentication required'));
+  }
+  try {
+    const decoded = jwt.verify(token, auth.JWT_SECRET);
+    socket.user = decoded;
+    next();
+  } catch (err) {
+    next(new Error('Invalid or expired token'));
+  }
+});
+
 const matchManager = new MatchManager(io);
 cfService.initCodeforces();
 
 // =======================
+// Rate Limiting
+// =======================
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // limit each IP to 20 auth requests per window
+  message: { error: 'Too many authentication attempts. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// =======================
 // Authentication Routes
 // =======================
-app.use("/auth", auth.router);
+app.use("/auth", authLimiter, auth.router);
 
 
 
@@ -178,6 +208,20 @@ app.get("/problem", (req, res) => {
     res.status(500).json({
       error: error.message,
     });
+  }
+});
+
+// Verify Codeforces Handle
+app.get("/verify-cf", async (req, res) => {
+  try {
+    const { handle } = req.query;
+    if (!handle || !handle.trim()) {
+      return res.status(400).json({ error: "Handle is required" });
+    }
+    const result = await cfService.verifyHandle(handle.trim());
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

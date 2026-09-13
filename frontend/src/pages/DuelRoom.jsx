@@ -16,7 +16,9 @@ export default function DuelRoom({ user, token }) {
   const socketRef = useRef(null);
 
   useEffect(() => {
-    socketRef.current = io(API_BASE_URL);
+    socketRef.current = io(API_BASE_URL, {
+      auth: { token }
+    });
     
     socketRef.current.emit('join-room', { roomId, userId: user?.id }, (res) => {
       if (res.success) {

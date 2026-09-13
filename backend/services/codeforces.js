@@ -51,9 +51,36 @@ function getRandomProblem(minRating, maxRating, excludedProblemIds) {
   return validProblems[randomIndex];
 }
 
+// Verify that a Codeforces handle exists and return basic profile info
+async function verifyHandle(handle) {
+  try {
+    const response = await axios.get(
+      `https://codeforces.com/api/user.info?handles=${encodeURIComponent(handle)}`
+    );
+    if (response.data.status === 'OK' && response.data.result.length > 0) {
+      const cfUser = response.data.result[0];
+      return {
+        valid: true,
+        handle: cfUser.handle,
+        rating: cfUser.rating || null,
+        rank: cfUser.rank || 'unrated',
+        avatar: cfUser.titlePhoto || null
+      };
+    }
+    return { valid: false };
+  } catch (error) {
+    // Codeforces returns 400 for invalid handles
+    if (error.response && error.response.status === 400) {
+      return { valid: false, error: 'Handle not found on Codeforces' };
+    }
+    return { valid: false, error: error.message };
+  }
+}
+
 module.exports = {
   initCodeforces,
   getUserSubmissions,
   getRecentSubmissions,
-  getRandomProblem
+  getRandomProblem,
+  verifyHandle
 };

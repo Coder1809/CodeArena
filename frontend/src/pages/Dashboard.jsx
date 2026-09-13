@@ -1,11 +1,16 @@
-import { useState, useEffect } from 'react';
-import { Trophy, XCircle, Award, Code, Swords, MinusCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Trophy, XCircle, Award, Code, Swords, MinusCircle, CheckCircle, Loader } from 'lucide-react';
 import API_BASE_URL from '../config';
 
 export default function Dashboard({ user, setUser, token }) {
   const [handleInput, setHandleInput] = useState(user?.cf_handle || '');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
+
+  // CF handle verification state
+  const [cfVerifying, setCfVerifying] = useState(false);
+  const [cfVerified, setCfVerified] = useState(null);
+  const cfDebounceRef = useRef(null);
 
   useEffect(() => {
     if (token) {
@@ -23,8 +28,47 @@ export default function Dashboard({ user, setUser, token }) {
     }
   }, [token, setUser]);
 
+  // Verify CF handle with debounce
+  useEffect(() => {
+    // Don't verify if handle matches current saved handle
+    if (!handleInput.trim() || handleInput.trim() === user?.cf_handle) {
+      setCfVerified(null);
+      setCfVerifying(false);
+      return;
+    }
+
+    setCfVerifying(true);
+    setCfVerified(null);
+
+    if (cfDebounceRef.current) clearTimeout(cfDebounceRef.current);
+
+    cfDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/verify-cf?handle=${encodeURIComponent(handleInput.trim())}`);
+        const data = await res.json();
+        setCfVerified(data);
+      } catch {
+        setCfVerified({ valid: false, error: 'Could not verify handle' });
+      } finally {
+        setCfVerifying(false);
+      }
+    }, 600);
+
+    return () => {
+      if (cfDebounceRef.current) clearTimeout(cfDebounceRef.current);
+    };
+  }, [handleInput, user?.cf_handle]);
+
   const handleSaveCF = async (e) => {
     e.preventDefault();
+    if (!handleInput.trim()) return;
+
+    // Block save if handle was checked and is invalid
+    if (cfVerified && !cfVerified.valid) {
+      setMsg('Error: This Codeforces handle does not exist. Please check and try again.');
+      return;
+    }
+
     setLoading(true);
     setMsg('');
     try {
@@ -34,12 +78,13 @@ export default function Dashboard({ user, setUser, token }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ cfHandle: handleInput })
+        body: JSON.stringify({ cfHandle: handleInput.trim() })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to update handle');
       if (data.user) {
         setUser(data.user);
+        setCfVerified(null);
         setMsg('Codeforces handle updated successfully!');
       }
     } catch (err) {
@@ -134,18 +179,34 @@ export default function Dashboard({ user, setUser, token }) {
 
           <div className="form-group">
             <label className="label" htmlFor="cf-handle-input">Codeforces Handle</label>
-            <input
-              id="cf-handle-input"
-              type="text"
-              placeholder="e.g. tourist, Benq"
-              value={handleInput}
-              onChange={e => setHandleInput(e.target.value)}
-              required
-              autoComplete="off"
-            />
+            <div className="input-with-status">
+              <input
+                id="cf-handle-input"
+                type="text"
+                placeholder="e.g. tourist, Benq"
+                value={handleInput}
+                onChange={e => setHandleInput(e.target.value)}
+                autoComplete="off"
+              />
+              {handleInput.trim() && handleInput.trim() !== user?.cf_handle && (
+                <span className="input-status-icon">
+                  {cfVerifying && <Loader size={16} className="spin-icon" color="var(--text-muted)" />}
+                  {!cfVerifying && cfVerified?.valid && <CheckCircle size={16} color="var(--success)" />}
+                  {!cfVerifying && cfVerified && !cfVerified.valid && <XCircle size={16} color="var(--danger)" />}
+                </span>
+              )}
+            </div>
+            {!cfVerifying && cfVerified?.valid && (
+              <span className="field-success">
+                ✓ Verified — {cfVerified.handle} ({cfVerified.rank}{cfVerified.rating ? `, ${cfVerified.rating}` : ''})
+              </span>
+            )}
+            {!cfVerifying && cfVerified && !cfVerified.valid && (
+              <span className="field-error">Handle not found on Codeforces</span>
+            )}
           </div>
 
-          <button type="submit" className="btn--auto" disabled={loading}>
+          <button type="submit" className="btn--auto" disabled={loading || (cfVerified && !cfVerified.valid)}>
             {loading ? 'Saving…' : 'Update Handle'}
           </button>
         </form>

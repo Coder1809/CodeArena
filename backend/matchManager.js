@@ -155,7 +155,10 @@ class MatchManager {
       if (room.status !== 'ACTIVE' || !room.problem || !room.problem.contestId) continue;
 
       const players = [room.player1, room.player2].filter(Boolean);
+      let matchResolved = false;
+
       for (const player of players) {
+        if (matchResolved) break;
         if (!player.cf_handle) continue;
 
         try {
@@ -175,7 +178,8 @@ class MatchManager {
                 problem: room.problem
               });
               await this.endMatch(roomId, player.id);
-              return;
+              matchResolved = true;
+              break;
             }
           }
         } catch (err) {
@@ -194,27 +198,40 @@ class MatchManager {
     room.endTime = Date.now();
     room.winner = winnerId;
 
-    await db.query(
-      `UPDATE matches SET status = 'FINISHED', winner = $1, end_time = NOW() WHERE id = $2`,
-      [winnerId, room.matchId]
-    );
+    // Use a database transaction to ensure atomic stat updates
+    const client = await db.pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    if (winnerId) {
-      // Update winner wins
-      await db.query('UPDATE users SET wins = wins + 1 WHERE id = $1', [winnerId]);
-      // Update loser losses
-      const loserId = room.player1?.id === winnerId ? room.player2?.id : room.player1?.id;
-      if (loserId) {
-        await db.query('UPDATE users SET losses = losses + 1 WHERE id = $1', [loserId]);
+      await client.query(
+        `UPDATE matches SET status = 'FINISHED', winner = $1, end_time = NOW() WHERE id = $2`,
+        [winnerId, room.matchId]
+      );
+
+      if (winnerId) {
+        // Update winner wins
+        await client.query('UPDATE users SET wins = wins + 1 WHERE id = $1', [winnerId]);
+        // Update loser losses
+        const loserId = room.player1?.id === winnerId ? room.player2?.id : room.player1?.id;
+        if (loserId) {
+          await client.query('UPDATE users SET losses = losses + 1 WHERE id = $1', [loserId]);
+        }
+      } else {
+        // Match was drawn / timed out: update draws count for participants
+        if (room.player1?.id) {
+          await client.query('UPDATE users SET draws = COALESCE(draws, 0) + 1 WHERE id = $1', [room.player1.id]);
+        }
+        if (room.player2?.id && room.player2.id !== room.player1?.id) {
+          await client.query('UPDATE users SET draws = COALESCE(draws, 0) + 1 WHERE id = $1', [room.player2.id]);
+        }
       }
-    } else {
-      // Match was drawn / timed out: update draws count for participants
-      if (room.player1?.id) {
-        await db.query('UPDATE users SET draws = COALESCE(draws, 0) + 1 WHERE id = $1', [room.player1.id]);
-      }
-      if (room.player2?.id && room.player2.id !== room.player1?.id) {
-        await db.query('UPDATE users SET draws = COALESCE(draws, 0) + 1 WHERE id = $1', [room.player2.id]);
-      }
+
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      console.error('Transaction failed in endMatch:', err.message);
+    } finally {
+      client.release();
     }
 
     const winnerUser = winnerId ? await this.getUserData(winnerId) : null;
@@ -224,6 +241,7 @@ class MatchManager {
       winnerId: winnerId
     });
   }
+
 
   sanitizeRoom(room) {
     return {
