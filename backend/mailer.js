@@ -1,15 +1,17 @@
+require('dotenv').config();
 const nodemailer = require('nodemailer');
 
-// Check if email sending credentials are provided
-const isEmailConfigured = Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+function getTransporter() {
+  const user = process.env.EMAIL_USER ? process.env.EMAIL_USER.trim() : null;
+  const pass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '').trim() : null;
 
-let transporter = null;
-if (isEmailConfigured) {
-  transporter = nodemailer.createTransport({
+  if (!user || !pass) return null;
+
+  return nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
+      user: user,
+      pass: pass
     }
   });
 }
@@ -20,8 +22,10 @@ if (isEmailConfigured) {
  */
 async function sendVerificationOtp(email, username, otp) {
   const expiryMinutes = 10;
+  const transporter = getTransporter();
+  const senderEmail = process.env.EMAIL_USER ? process.env.EMAIL_USER.trim() : null;
 
-  // Always log to console for instant local development and offline testing
+  // Always log to console for instant local development and offline inspection
   console.log('\n┌─────────────────────────────────────────────────────────────┐');
   console.log('│  ⚡ [CodeArena Auth] Email Verification OTP                │');
   console.log(`│  To:      ${email.padEnd(50)}│`);
@@ -30,7 +34,7 @@ async function sendVerificationOtp(email, username, otp) {
   console.log(`│  Expires: in ${expiryMinutes} minutes                                      │`);
   console.log('└─────────────────────────────────────────────────────────────┘\n');
 
-  if (!isEmailConfigured || !transporter) {
+  if (!transporter || !senderEmail) {
     return {
       success: true,
       delivered: false,
@@ -105,14 +109,15 @@ async function sendVerificationOtp(email, username, otp) {
   `;
 
   try {
-    await transporter.sendMail({
-      from: `"CodeArena" <${process.env.EMAIL_USER}>`,
+    const info = await transporter.sendMail({
+      from: `"CodeArena" <${senderEmail}>`,
       to: email,
       subject: `Your CodeArena Verification Code: ${otp}`,
       text: `Your CodeArena verification code is: ${otp}. It expires in ${expiryMinutes} minutes.`,
       html: htmlContent
     });
-    return { success: true, delivered: true };
+    console.log('✅ [CodeArena Mailer] Email dispatched successfully! Message ID:', info.messageId);
+    return { success: true, delivered: true, messageId: info.messageId };
   } catch (err) {
     console.error('⚠️ [CodeArena Mailer] Failed to deliver email:', err.message);
     return {
@@ -126,5 +131,5 @@ async function sendVerificationOtp(email, username, otp) {
 
 module.exports = {
   sendVerificationOtp,
-  isEmailConfigured
+  getTransporter
 };
