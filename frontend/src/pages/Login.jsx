@@ -157,7 +157,9 @@ export default function Login({ setToken, setUser }) {
         <form onSubmit={handleSubmit} noValidate>
           {isRegister && (
             <div className="form-group">
-              <label className="label" htmlFor="login-username">Username</label>
+              <label className="label" htmlFor="login-username">
+                Username <span className="label__required" aria-hidden="true">*</span>
+              </label>
               <input
                 id="login-username"
                 type="text"
@@ -175,7 +177,9 @@ export default function Login({ setToken, setUser }) {
           )}
 
           <div className="form-group">
-            <label className="label" htmlFor="login-email">Email Address</label>
+            <label className="label" htmlFor="login-email">
+              Email Address <span className="label__required" aria-hidden="true">*</span>
+            </label>
             <input
               id="login-email"
               type="email"
@@ -192,7 +196,9 @@ export default function Login({ setToken, setUser }) {
           </div>
 
           <div className="form-group">
-            <label className="label" htmlFor="login-password">Password</label>
+            <label className="label" htmlFor="login-password">
+              Password <span className="label__required" aria-hidden="true">*</span>
+            </label>
             <input
               id="login-password"
               type="password"
@@ -220,7 +226,9 @@ export default function Login({ setToken, setUser }) {
 
           {isRegister && (
             <div className="form-group">
-              <label className="label" htmlFor="login-cf">Codeforces Handle (Optional)</label>
+              <label className="label" htmlFor="login-cf">
+                Codeforces Handle <span className="label__optional">(Optional)</span>
+              </label>
               <div className="input-with-status">
                 <input
                   id="login-cf"

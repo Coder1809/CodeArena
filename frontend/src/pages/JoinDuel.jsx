@@ -55,7 +55,9 @@ export default function JoinDuel({ user, token }) {
 
         <form onSubmit={handleJoin}>
           <div className="form-group">
-            <label className="label" htmlFor="join-room-id">Arena Room ID</label>
+            <label className="label" htmlFor="join-room-id">
+              Arena Room ID <span className="label__required" aria-hidden="true">*</span>
+            </label>
             <input
               id="join-room-id"
               type="text"
