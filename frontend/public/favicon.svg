@@ -1,19 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Dark rounded background -->
-  <rect width="64" height="64" rx="14" fill="#0f0f1a"/>
+  <defs>
+    <linearGradient id="bladeGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ea580c"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#fef08a"/>
+    </linearGradient>
+    <radialGradient id="sparkGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#f59e0b" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Deep matte carbon rounded background with gold border -->
+  <rect width="64" height="64" rx="14" fill="#090a0d"/>
+  <rect width="62" height="62" x="1" y="1" rx="13" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-opacity="0.35"/>
+
   <!-- Left sword blade -->
-  <line x1="18" y1="46" x2="36" y2="14" stroke="#a78bfa" stroke-width="3" stroke-linecap="round"/>
+  <line x1="17" y1="47" x2="37" y2="15" stroke="url(#bladeGrad)" stroke-width="3.5" stroke-linecap="round"/>
   <!-- Left sword guard -->
-  <line x1="24" y1="38" x2="32" y2="42" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="22" y1="39" x2="30" y2="43" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
   <!-- Left sword pommel -->
-  <circle cx="17" cy="48" r="2.5" fill="#863bff"/>
+  <circle cx="16" cy="48" r="2.5" fill="#f59e0b"/>
+
   <!-- Right sword blade -->
-  <line x1="46" y1="46" x2="28" y2="14" stroke="#a78bfa" stroke-width="3" stroke-linecap="round"/>
+  <line x1="47" y1="47" x2="27" y2="15" stroke="url(#bladeGrad)" stroke-width="3.5" stroke-linecap="round"/>
   <!-- Right sword guard -->
-  <line x1="40" y1="38" x2="32" y2="42" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="42" y1="39" x2="34" y2="43" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
   <!-- Right sword pommel -->
-  <circle cx="47" cy="48" r="2.5" fill="#863bff"/>
-  <!-- Center clash spark -->
-  <circle cx="32" cy="26" r="3" fill="#c4b5fd" opacity="0.9"/>
-  <circle cx="32" cy="26" r="6" fill="#863bff" opacity="0.25"/>
+  <circle cx="48" cy="48" r="2.5" fill="#f59e0b"/>
+
+  <!-- Center clash spark & glow -->
+  <circle cx="32" cy="27" r="9" fill="url(#sparkGlow)"/>
+  <circle cx="32" cy="27" r="2.5" fill="#ffffff"/>
 </svg>
