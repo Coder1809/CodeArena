@@ -69,13 +69,13 @@ export default function JoinDuel({ user, token }) {
             />
           </div>
 
-          <button type="submit" className="btn--success" disabled={loading}>
-            {loading ? 'Joining Arena…' : 'Join Arena Room'}
-          </button>
-
           <p className="form-required-hint">
             <span className="label__required">*</span> Required fields
           </p>
+
+          <button type="submit" className="btn--success" disabled={loading}>
+            {loading ? 'Joining Arena…' : 'Join Arena Room'}
+          </button>
         </form>
       </div>
     </div>

@@ -257,13 +257,13 @@ export default function Login({ setToken, setUser }) {
             </div>
           )}
 
-          <button type="submit" disabled={loading}>
-            {loading ? 'Processing…' : (isRegister ? 'Register Account' : 'Sign In')}
-          </button>
-
           <p className="form-required-hint">
             <span className="label__required">*</span> Required fields
           </p>
+
+          <button type="submit" disabled={loading}>
+            {loading ? 'Processing…' : (isRegister ? 'Register Account' : 'Sign In')}
+          </button>
         </form>
 
         <div className="auth-toggle">
