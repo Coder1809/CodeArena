@@ -102,7 +102,7 @@ async function sendVerificationOtp(email, username, otp) {
                 <!-- Footer -->
                 <tr>
                   <td style="padding: 16px 32px 24px 32px; background-color: #0d121f; text-align: center; font-size: 12px; color: #6B7280;">
-                    &copy; ${new Date().getFullYear()} Team CodeArena. All rights reserved.
+                    &copy; ${new Date().getFullYear()} CodeArena. All rights reserved.
                   </td>
                 </tr>
               </table>
